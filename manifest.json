@@ -1,0 +1,43 @@
+{
+	"manifest_version": 3,
+	"name": "TIDORA — Utwórz zadanie",
+	"short_name": "TIDORA Zadania",
+	"version": "0.1.0",
+	"description": "Twórz zadania w TIDORA (FAKTURA) z Gmaila, Roundcube albo dowolnego zaznaczenia na stronie.",
+	"icons": {
+		"16": "icons/icon16.png",
+		"32": "icons/icon32.png",
+		"48": "icons/icon48.png",
+		"128": "icons/icon128.png"
+	},
+	"action": {
+		"default_title": "Utwórz zadanie w TIDORA",
+		"default_popup": "popup.html",
+		"default_icon": {
+			"16": "icons/icon16.png",
+			"32": "icons/icon32.png"
+		}
+	},
+	"background": {
+		"service_worker": "background.js"
+	},
+	"permissions": ["contextMenus", "storage", "notifications", "activeTab", "scripting"],
+	"optional_host_permissions": ["*://*/*"],
+	"content_scripts": [
+		{
+			"matches": ["https://mail.google.com/*"],
+			"js": ["content-gmail.js"],
+			"run_at": "document_idle"
+		}
+	],
+	"options_ui": {
+		"page": "options.html",
+		"open_in_tab": true
+	},
+	"browser_specific_settings": {
+		"gecko": {
+			"id": "tidora-task-extension@tidora.one",
+			"strict_min_version": "115.0"
+		}
+	}
+}

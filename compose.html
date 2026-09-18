@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="pl">
+<head>
+	<meta charset="utf-8" />
+	<title>Nowe zadanie w TIDORA</title>
+	<link rel="stylesheet" href="task-form.css" />
+	<style>body { width: auto; }</style>
+</head>
+<body>
+	<div class="wrap">
+		<h1><span class="dot"></span> Nowe zadanie w TIDORA</h1>
+		<form id="form">
+			<label for="title">Tytuł</label>
+			<input id="title" type="text" required maxlength="255" />
+
+			<label for="description">Opis</label>
+			<textarea id="description" rows="6"></textarea>
+
+			<a id="url" class="url-line" target="_blank" rel="noopener"></a>
+
+			<div class="row">
+				<button type="submit" id="submit" class="btn-primary">Utwórz zadanie</button>
+			</div>
+			<div id="status" class="status"></div>
+		</form>
+		<div class="footer"><a href="#" id="open-options">Ustawienia rozszerzenia</a></div>
+	</div>
+	<script src="task-form.js"></script>
+	<script src="compose.js"></script>
+</body>
+</html>

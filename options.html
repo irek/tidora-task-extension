@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="pl">
+<head>
+	<meta charset="utf-8" />
+	<title>Ustawienia — TIDORA: Utwórz zadanie</title>
+	<style>
+		* { box-sizing: border-box; }
+		body {
+			font: 14px/1.5 system-ui, -apple-system, "Segoe UI", sans-serif;
+			color: #1f2430;
+			max-width: 560px;
+			margin: 32px auto;
+			padding: 0 16px;
+		}
+		h1 { font-size: 20px; display: flex; align-items: center; gap: 8px; }
+		h1 .dot { width: 10px; height: 10px; border-radius: 50%; background: #4f46e5; display: inline-block; }
+		p.hint { color: #666; font-size: 13px; }
+		fieldset { border: 1px solid #e2e4ea; border-radius: 10px; padding: 16px 18px; margin: 18px 0; }
+		legend { font-weight: 600; padding: 0 6px; }
+		label { display: block; font-weight: 500; margin: 12px 0 4px; }
+		input { width: 100%; padding: 8px 10px; border: 1px solid #d7d9e0; border-radius: 6px; font: inherit; }
+		.field-hint { font-size: 12px; color: #888; margin-top: 3px; }
+		button {
+			font: inherit;
+			border: none;
+			border-radius: 6px;
+			padding: 9px 16px;
+			cursor: pointer;
+			background: #4f46e5;
+			color: #fff;
+		}
+		button.secondary { background: #eee; color: #333; margin-left: 8px; }
+		.actions { margin-top: 16px; }
+		.status { margin-top: 12px; font-size: 13px; border-radius: 6px; padding: 10px; display: none; }
+		.status.ok { display: block; background: #e6f6ea; color: #146c2e; }
+		.status.err { display: block; background: #fdecec; color: #a3241f; }
+		.status.info { display: block; background: #eef1fd; color: #3a3f8f; }
+		code { background: #f1f2f6; padding: 1px 5px; border-radius: 4px; }
+	</style>
+</head>
+<body>
+	<h1><span class="dot"></span> TIDORA — Utwórz zadanie</h1>
+	<p class="hint">
+		Zaznacz dowolny tekst na stronie (Gmail, Roundcube, cokolwiek) i wybierz z menu kontekstowego
+		„Utwórz zadanie w TIDORA z zaznaczenia” — albo kliknij ikonę rozszerzenia na pasku narzędzi.
+	</p>
+
+	<fieldset>
+		<legend>Połączenie z TIDORA</legend>
+		<label for="baseUrl">Adres instancji</label>
+		<input id="baseUrl" type="url" placeholder="https://twoja-instancja.tidora.one" required />
+		<div class="field-hint">Bez ukośnika na końcu, np. <code>https://int.uvd.tidora.one</code>.</div>
+
+		<label for="apiKey">Osobisty klucz API</label>
+		<input id="apiKey" type="password" placeholder="tbk_..." required />
+		<div class="field-hint">
+			Wygeneruj w panelu TIDORA: Ustawienia → Integracje → API zewnętrzne → Nowy klucz,
+			z uprawnieniem <code>Tworzenie zadań</code> i przypisanym Twoim kontem.
+		</div>
+
+		<div class="actions">
+			<button id="save">Zapisz</button>
+			<button id="test" class="secondary" type="button">Testuj połączenie</button>
+		</div>
+		<div id="status" class="status"></div>
+	</fieldset>
+
+	<fieldset>
+		<legend>Roundcube Webmail (opcjonalnie)</legend>
+		<p class="hint" style="margin-top:0">
+			Podaj adres swojego Roundcube, żeby dostać dodatkowy przycisk „+ TIDORA” w widoku
+			wiadomości (poza uniwersalnym zaznaczeniem, które działa wszędzie i bez tego).
+		</p>
+		<label for="roundcubeUrl">Adres Roundcube</label>
+		<input id="roundcubeUrl" type="url" placeholder="https://webmail.twoja-firma.pl" />
+
+		<div class="actions">
+			<button id="saveRoundcube" type="button">Zapisz i przyznaj dostęp</button>
+		</div>
+		<div id="roundcubeStatus" class="status"></div>
+	</fieldset>
+
+	<script src="options.js"></script>
+</body>
+</html>
