@@ -17,7 +17,7 @@ h1 {
 }
 h1 .dot { width: 8px; height: 8px; border-radius: 50%; background: #4f46e5; display: inline-block; }
 label { display: block; font-weight: 500; margin: 10px 0 4px; color: #444; }
-input, textarea {
+input, textarea, select {
 	width: 100%;
 	padding: 7px 8px;
 	border: 1px solid #d7d9e0;
@@ -25,7 +25,7 @@ input, textarea {
 	font: inherit;
 	background: #fafafa;
 }
-input:focus, textarea:focus { outline: 2px solid #4f46e5; outline-offset: -1px; background: #fff; }
+input:focus, textarea:focus, select:focus { outline: 2px solid #4f46e5; outline-offset: -1px; background: #fff; }
 textarea { resize: vertical; min-height: 70px; }
 .url-line { font-size: 11px; color: #777; margin-top: 4px; word-break: break-all; }
 .row { display: flex; gap: 8px; margin-top: 14px; }

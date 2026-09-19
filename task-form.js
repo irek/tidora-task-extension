@@ -16,6 +16,8 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 		title: document.getElementById('title'),
 		description: document.getElementById('description'),
 		url: document.getElementById('url'),
+		contractorField: document.getElementById('contractor-field'),
+		contractor: document.getElementById('contractor'),
 		submit: document.getElementById('submit'),
 		status: document.getElementById('status'),
 		openOptions: document.getElementById('open-options')
@@ -30,6 +32,23 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 		e.preventDefault();
 		ext.runtime.openOptionsPage();
 	});
+
+	// Selektor klienta jest opcjonalny w dwójnasób: pole samo w sobie (zadanie nie musi
+	// dotyczyć konkretnego kontrahenta) i jego widoczność (klucz bez tasks:write - albo
+	// wydany zanim ten endpoint istniał w panelu - dostanie 403/404; formularz ma wtedy
+	// dalej działać, tylko bez tego pola, zamiast się wywalać).
+	if (els.contractorField) {
+		ext.runtime.sendMessage({ type: 'TIDORA_LIST_CONTRACTORS' }).then((resp) => {
+			if (!resp?.ok || !resp.contractors?.length) return;
+			for (const c of resp.contractors) {
+				const opt = document.createElement('option');
+				opt.value = String(c.id);
+				opt.textContent = c.name;
+				els.contractor.appendChild(opt);
+			}
+			els.contractorField.style.display = '';
+		});
+	}
 
 	document.getElementById('form').addEventListener('submit', async (e) => {
 		e.preventDefault();
@@ -51,7 +70,8 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 			task: {
 				title,
 				description: els.description.value.trim(),
-				email_url: initialPrefill.email_url || ''
+				email_url: initialPrefill.email_url || '',
+				contractor_id: els.contractor?.value ? Number(els.contractor.value) : undefined
 			}
 		});
 

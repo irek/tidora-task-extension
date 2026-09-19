@@ -64,6 +64,10 @@ ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 		testConnection(msg.baseUrl, msg.apiKey).then(sendResponse);
 		return true;
 	}
+	if (msg?.type === 'TIDORA_LIST_CONTRACTORS') {
+		listContractors().then(sendResponse);
+		return true;
+	}
 	if (msg?.type === 'TIDORA_REGISTER_WEBMAIL') {
 		registerWebmailOrigin(msg.originPattern).then(sendResponse);
 		return true;
@@ -111,6 +115,29 @@ async function createTask(task) {
 		return { ok: true, taskId: data.task_id };
 	} catch (e) {
 		return { ok: false, error: 'Nie udało się połączyć z instancją TIDORA (' + e.message + ')' };
+	}
+}
+
+// Lista kontrahentów do dropdownu w formularzu - klucz bez tasks:write (albo z tasks:write,
+// ale wydany PRZED dodaniem tego endpointu w panelu) dostanie tu 403/404; formularz ma się
+// wtedy obejść bez selektora klienta, nie zepsuć całej reszty (patrz initContractorPicker w
+// task-form.js).
+async function listContractors() {
+	const { baseUrl, apiKey } = await getConfig();
+	if (!baseUrl || !apiKey) {
+		return { ok: false, error: 'Brak konfiguracji' };
+	}
+	try {
+		const res = await fetch(baseUrl + '/api/ext/contractors', {
+			headers: { Authorization: 'Bearer ' + apiKey }
+		});
+		const data = await res.json().catch(() => null);
+		if (!res.ok || !data?.result) {
+			return { ok: false, error: data?.error || `HTTP ${res.status}` };
+		}
+		return { ok: true, contractors: data.contractors };
+	} catch (e) {
+		return { ok: false, error: e.message };
 	}
 }
 

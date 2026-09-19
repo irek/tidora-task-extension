@@ -11,6 +11,8 @@ TIDORA (FAKTURA) bez wchodzenia do panelu:
 - **Roundcube** (opcjonalnie) — po podaniu adresu w Ustawieniach rozszerzenia pojawia się
   pływający przycisk „+ TIDORA" w widoku poczty.
 - **Ikona na pasku narzędzi** — szybkie utworzenie zadania z bieżącej karty.
+- **Wybór klienta** — jeśli klucz API ma uprawnienie do tworzenia zadań, formularz dociąga
+  listę kontrahentów i pozwala od razu powiązać zadanie z klientem (opcjonalnie).
 
 ## Wymaga
 
