@@ -2,6 +2,15 @@
 // paska narzędzi - kontekst bieżącej karty) jak i compose.html (okienko otwierane z menu
 // kontekstowego - kontekst zaznaczenia/strony przekazany przez background.js). Obie strony
 // dostarczają tylko initialPrefill; reszta (wysyłka, obsługa błędów) jest identyczna.
+//
+// Deklarowane tu (nie w popup.js/compose.js) - klasyczne (nie-modułowe) skrypty dzielą ten
+// sam zakres globalny strony, a ten plik ładuje się w obu jako pierwszy (patrz <script> w
+// popup.html/compose.html), więc popup.js/compose.js widzą `ext` bez własnej deklaracji.
+// Firefox ma promisowy `browser.*`; jego `chrome.*` jest tylko callbackowe dla zgodności ze
+// starym Chrome, więc `await chrome.storage...` by się tu wywalił (patrz background.js po
+// pełny komentarz, w tym o atrapie `browser` w Chromium, przed którą chroni ten warunek).
+const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
+
 function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	const els = {
 		title: document.getElementById('title'),
@@ -19,7 +28,7 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 
 	els.openOptions?.addEventListener('click', (e) => {
 		e.preventDefault();
-		chrome.runtime.openOptionsPage();
+		ext.runtime.openOptionsPage();
 	});
 
 	document.getElementById('form').addEventListener('submit', async (e) => {
@@ -30,14 +39,14 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 		els.submit.disabled = true;
 		setStatus('info', 'Wysyłanie…');
 
-		const { baseUrl, apiKey } = await chrome.storage.local.get(['baseUrl', 'apiKey']);
+		const { baseUrl, apiKey } = await ext.storage.local.get(['baseUrl', 'apiKey']);
 		if (!baseUrl || !apiKey) {
 			setStatus('err', 'Uzupełnij adres instancji i klucz API w ustawieniach rozszerzenia.');
 			els.submit.disabled = false;
 			return;
 		}
 
-		const resp = await chrome.runtime.sendMessage({
+		const resp = await ext.runtime.sendMessage({
 			type: 'TIDORA_CREATE_TASK',
 			task: {
 				title,

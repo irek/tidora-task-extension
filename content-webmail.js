@@ -8,6 +8,10 @@
 // tematu/treści, degradujemy się łagodnie: zaznaczenie użytkownika > heurystyka DOM > sam
 // tytuł strony. Pływający przycisk zamiast wstrzykiwania w pasek narzędzi appki z tego
 // samego powodu - nie trzeba trafić w konkretny skin, żeby przycisk się w ogóle pojawił.
+//
+// Alias ext = browser.*/chrome.* (z ochroną przed atrapą `browser` w Chromium) - patrz
+// pełny komentarz w background.js.
+const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
 
 function extractFallback() {
 	const selection = window.getSelection()?.toString().trim();
@@ -49,7 +53,7 @@ function createFloatingButton() {
 	].join(';');
 	btn.addEventListener('click', () => {
 		const { title, description } = extractFallback();
-		chrome.runtime.sendMessage({
+		ext.runtime.sendMessage({
 			type: 'TIDORA_OPEN_COMPOSE',
 			prefill: { title, description, email_url: location.href }
 		});

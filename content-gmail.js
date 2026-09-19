@@ -2,6 +2,11 @@
 // dla treści wiadomości) są tym, czego od lat używają inne rozszerzenia integrujące się z
 // Gmailem, ale Google może je zmienić bez ostrzeżenia. Jeśli przycisk przestanie się
 // pojawiać, to pierwsze miejsce do sprawdzenia.
+//
+// Alias ext = browser.*/chrome.* (z ochroną przed atrapą `browser` w Chromium) - patrz
+// pełny komentarz w background.js.
+const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
+
 const SUBJECT_SELECTOR = 'h2.hP';
 const BODY_SELECTOR = '.a3s.aiL';
 const BUTTON_MARK = 'data-tidora-injected';
@@ -41,7 +46,7 @@ function createTaskFromMessage(subjectEl) {
 	const bodyEl = container.querySelector(BODY_SELECTOR);
 	const description = bodyEl ? bodyEl.innerText.trim().slice(0, 4000) : '';
 
-	chrome.runtime.sendMessage({
+	ext.runtime.sendMessage({
 		type: 'TIDORA_OPEN_COMPOSE',
 		prefill: { title, description, email_url: location.href }
 	});

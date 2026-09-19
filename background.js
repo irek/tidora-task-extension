@@ -1,27 +1,40 @@
-// Service worker (MV3) - jedyne miejsce, które faktycznie woła API TIDORA.
-// Content scripty i popup/compose/options NIGDY nie fetchują same - zawsze
-// przez wiadomość do tego workera. Powód: to on ma host_permissions dla
-// zapisanego baseUrl (nadane dynamicznie przy zapisie ustawień), więc tylko
-// stąd fetch cross-origin działa bez configu CORS po stronie serwera TIDORA
-// (uprawnienie hosta w rozszerzeniu omija CORS dla tła/service workera -
-// udokumentowane zachowanie Chrome/Firefox MV3, nie obejście, nie hack).
+// Tło rozszerzenia - jedyne miejsce, które faktycznie woła API TIDORA. Content scripty i
+// popup/compose/options NIGDY nie fetchują same - zawsze przez wiadomość do tego skryptu.
+// Powód: to on ma host_permissions dla zapisanego baseUrl (nadane dynamicznie przy zapisie
+// ustawień), więc tylko stąd fetch cross-origin działa bez configu CORS po stronie serwera
+// TIDORA (uprawnienie hosta w rozszerzeniu omija CORS dla tła - udokumentowane zachowanie
+// Chrome/Firefox MV3, nie obejście, nie hack).
+//
+// Chrome MV3 wymaga background.service_worker; Firefox (na dziś) go nie obsługuje i chce
+// background.scripts - manifest.json deklaruje oba, każda przeglądarka używa swojego. Firefox
+// ma promisowy `browser.*`; jego `chrome.*` jest tylko callbackowe dla zgodności ze starym
+// Chrome, więc `await chrome.storage...` by się tu wywalił - stąd alias `ext` zamiast
+// wywołań wprost (patrz ten sam alias w każdym pozostałym pliku rozszerzenia).
+//
+// `typeof browser !== 'undefined'` NIE WYSTARCZY - nowsze Chromium (zweryfikowane na żywo:
+// Chromium spod Playwrighta) podstawia OKROJONY, niedziałający obiekt `browser` (prosty
+// {}, prototyp Object.prototype - prawdziwy Firefoksowy `browser` go NIE ma) i wtedy
+// onMessage zarejestrowany przez tę atrapę nigdy nie odpala się na wiadomości wysłane przez
+// chrome.runtime.sendMessage (zaobserwowane: opcje wisną w nieskończoność na "Sprawdzanie…").
+// Ten sam test prototypu stosuje oficjalny webextension-polyfill Mozilli.
+const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
 
 const ROUNDCUBE_SCRIPT_ID = 'tidora-webmail-roundcube';
 
-chrome.runtime.onInstalled.addListener(() => {
-	chrome.contextMenus.create({
+ext.runtime.onInstalled.addListener(() => {
+	ext.contextMenus.create({
 		id: 'tidora-from-selection',
 		title: 'Utwórz zadanie w TIDORA z zaznaczenia',
 		contexts: ['selection']
 	});
-	chrome.contextMenus.create({
+	ext.contextMenus.create({
 		id: 'tidora-from-page',
 		title: 'Utwórz zadanie w TIDORA z tej strony',
 		contexts: ['page']
 	});
 });
 
-chrome.contextMenus.onClicked.addListener((info, tab) => {
+ext.contextMenus.onClicked.addListener((info, tab) => {
 	if (info.menuItemId === 'tidora-from-selection') {
 		openCompose({
 			title: truncate(info.selectionText || tab?.title || '', 140),
@@ -37,7 +50,7 @@ chrome.contextMenus.onClicked.addListener((info, tab) => {
 	}
 });
 
-chrome.runtime.onMessage.addListener((msg, sender, sendResponse) => {
+ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 	if (msg?.type === 'TIDORA_OPEN_COMPOSE') {
 		openCompose(msg.prefill);
 		sendResponse({ ok: true });
@@ -69,13 +82,13 @@ function truncate(s, max) {
 
 async function openCompose(prefill) {
 	const id = 'p_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
-	await chrome.storage.session.set({ [id]: prefill });
-	const url = chrome.runtime.getURL('compose.html') + '?id=' + encodeURIComponent(id);
-	chrome.windows.create({ url, type: 'popup', width: 420, height: 480 });
+	await ext.storage.session.set({ [id]: prefill });
+	const url = ext.runtime.getURL('compose.html') + '?id=' + encodeURIComponent(id);
+	ext.windows.create({ url, type: 'popup', width: 420, height: 480 });
 }
 
 async function getConfig() {
-	const { baseUrl, apiKey } = await chrome.storage.local.get(['baseUrl', 'apiKey']);
+	const { baseUrl, apiKey } = await ext.storage.local.get(['baseUrl', 'apiKey']);
 	return { baseUrl: (baseUrl || '').replace(/\/+$/, ''), apiKey: apiKey || '' };
 }
 
@@ -119,9 +132,9 @@ async function testConnection(baseUrl, apiKey) {
 
 function notify(title, message) {
 	try {
-		chrome.notifications.create({
+		ext.notifications.create({
 			type: 'basic',
-			iconUrl: chrome.runtime.getURL('icons/icon48.png'),
+			iconUrl: ext.runtime.getURL('icons/icon48.png'),
 			title,
 			message: message || ''
 		});
@@ -131,12 +144,12 @@ function notify(title, message) {
 }
 
 // Roundcube (i podobne webmaile) mają domenę zależną od instalacji klienta - nie da się jej
-// wpisać na sztywno w manifest.json jak dla Gmaila. Rejestracja dynamiczna (chrome.scripting)
+// wpisać na sztywno w manifest.json jak dla Gmaila. Rejestracja dynamiczna (ext.scripting)
 // po tym, jak użytkownik poda adres w Ustawieniach i przyzna uprawnienie hosta.
 async function registerWebmailOrigin(originPattern) {
 	try {
 		await unregisterWebmail();
-		await chrome.scripting.registerContentScripts([
+		await ext.scripting.registerContentScripts([
 			{
 				id: ROUNDCUBE_SCRIPT_ID,
 				matches: [originPattern],
@@ -153,9 +166,9 @@ async function registerWebmailOrigin(originPattern) {
 
 async function unregisterWebmail() {
 	try {
-		const existing = await chrome.scripting.getRegisteredContentScripts({ ids: [ROUNDCUBE_SCRIPT_ID] });
+		const existing = await ext.scripting.getRegisteredContentScripts({ ids: [ROUNDCUBE_SCRIPT_ID] });
 		if (existing.length) {
-			await chrome.scripting.unregisterContentScripts({ ids: [ROUNDCUBE_SCRIPT_ID] });
+			await ext.scripting.unregisterContentScripts({ ids: [ROUNDCUBE_SCRIPT_ID] });
 		}
 		return { ok: true };
 	} catch (e) {

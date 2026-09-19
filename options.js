@@ -1,3 +1,8 @@
+// Firefox ma promisowy `browser.*`; jego `chrome.*` jest tylko callbackowe dla zgodności ze
+// starym Chrome, więc `await chrome...` by się tu wywalił - patrz ten sam alias w reszcie
+// plików rozszerzenia (background.js ma pełniejszy komentarz, w tym o atrapie `browser` w Chromium).
+const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
+
 const $ = (id) => document.getElementById(id);
 
 function setStatus(el, kind, text) {
@@ -10,7 +15,7 @@ function normalizeBaseUrl(v) {
 }
 
 (async () => {
-	const { baseUrl, apiKey, roundcubeUrl } = await chrome.storage.local.get(['baseUrl', 'apiKey', 'roundcubeUrl']);
+	const { baseUrl, apiKey, roundcubeUrl } = await ext.storage.local.get(['baseUrl', 'apiKey', 'roundcubeUrl']);
 	$('baseUrl').value = baseUrl || '';
 	$('apiKey').value = apiKey || '';
 	$('roundcubeUrl').value = roundcubeUrl || '';
@@ -36,13 +41,13 @@ $('save').addEventListener('click', async () => {
 
 	// Bez tego zgody hosta fetch z tła i tak poleci, ale w produkcji (bez CORS na serwerze)
 	// przeglądarka odrzuci odczyt odpowiedzi - patrz komentarz w background.js.
-	const granted = await chrome.permissions.request({ origins: [origin] });
+	const granted = await ext.permissions.request({ origins: [origin] });
 	if (!granted) {
 		setStatus(status, 'err', 'Bez przyznanego dostępu do tej domeny rozszerzenie nie będzie mogło się z nią połączyć.');
 		return;
 	}
 
-	await chrome.storage.local.set({ baseUrl, apiKey });
+	await ext.storage.local.set({ baseUrl, apiKey });
 	setStatus(status, 'ok', 'Zapisano.');
 });
 
@@ -52,7 +57,7 @@ $('test').addEventListener('click', async () => {
 	const status = $('status');
 	setStatus(status, 'info', 'Sprawdzanie…');
 
-	const resp = await chrome.runtime.sendMessage({ type: 'TIDORA_TEST_CONNECTION', baseUrl, apiKey });
+	const resp = await ext.runtime.sendMessage({ type: 'TIDORA_TEST_CONNECTION', baseUrl, apiKey });
 	if (resp?.ok) {
 		setStatus(status, 'ok', `Połączono ✓ (klucz: ${resp.apiKeyName || '?'})`);
 	} else {
@@ -65,8 +70,8 @@ $('saveRoundcube').addEventListener('click', async () => {
 	const status = $('roundcubeStatus');
 
 	if (!roundcubeUrl) {
-		await chrome.storage.local.remove('roundcubeUrl');
-		await chrome.runtime.sendMessage({ type: 'TIDORA_UNREGISTER_WEBMAIL' });
+		await ext.storage.local.remove('roundcubeUrl');
+		await ext.runtime.sendMessage({ type: 'TIDORA_UNREGISTER_WEBMAIL' });
 		setStatus(status, 'info', 'Wyłączono integrację z Roundcube.');
 		return;
 	}
@@ -79,15 +84,15 @@ $('saveRoundcube').addEventListener('click', async () => {
 		return;
 	}
 
-	const granted = await chrome.permissions.request({ origins: [origin] });
+	const granted = await ext.permissions.request({ origins: [origin] });
 	if (!granted) {
 		setStatus(status, 'err', 'Bez przyznanego dostępu przycisk nie pojawi się w Roundcube.');
 		return;
 	}
 
-	const resp = await chrome.runtime.sendMessage({ type: 'TIDORA_REGISTER_WEBMAIL', originPattern: origin });
+	const resp = await ext.runtime.sendMessage({ type: 'TIDORA_REGISTER_WEBMAIL', originPattern: origin });
 	if (resp?.ok) {
-		await chrome.storage.local.set({ roundcubeUrl });
+		await ext.storage.local.set({ roundcubeUrl });
 		setStatus(status, 'ok', 'Zapisano - odśwież Roundcube, żeby zobaczyć przycisk.');
 	} else {
 		setStatus(status, 'err', resp?.error || 'Nie udało się zarejestrować.');
