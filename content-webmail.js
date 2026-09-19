@@ -13,10 +13,17 @@
 // pełny komentarz w background.js.
 const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
 
+// innerHTML/klonowanie zaznaczenia, nie innerText - żeby tabele/listy/pogrubienia (np. z
+// widoku wiadomości) przeżyły w opisie zadania. Serwer i tak przepuszcza opis przez
+// HTMLPurifier (allowlista tagów), więc niepełny/nietypowy HTML jest bezpieczny do wysłania.
 function extractFallback() {
-	const selection = window.getSelection()?.toString().trim();
-	if (selection) {
-		return { title: document.title, description: selection };
+	const sel = window.getSelection();
+	if (sel && sel.rangeCount > 0 && sel.toString().trim()) {
+		const container = document.createElement('div');
+		for (let i = 0; i < sel.rangeCount; i++) {
+			container.appendChild(sel.getRangeAt(i).cloneContents());
+		}
+		return { title: document.title, description: container.innerHTML };
 	}
 
 	// Najczęstsze miejsca na treść wiadomości w skinach Elastic/Larry - best effort, nie
@@ -24,14 +31,14 @@ function extractFallback() {
 	const bodyCandidates = [
 		'#messagebody', '.message-part', 'iframe.iframe-content', 'iframe#messagecontframe', '#preview-pane iframe'
 	];
-	for (const sel of bodyCandidates) {
-		const el = document.querySelector(sel);
+	for (const selector of bodyCandidates) {
+		const el = document.querySelector(selector);
 		if (!el) continue;
-		const text = el.tagName === 'IFRAME'
-			? el.contentDocument?.body?.innerText
-			: el.innerText;
-		if (text && text.trim()) {
-			return { title: document.title, description: text.trim().slice(0, 4000) };
+		const html = el.tagName === 'IFRAME'
+			? el.contentDocument?.body?.innerHTML
+			: el.innerHTML;
+		if (html && html.trim()) {
+			return { title: document.title, description: html.trim().slice(0, 20000) };
 		}
 	}
 

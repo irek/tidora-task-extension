@@ -34,11 +34,24 @@ ext.runtime.onInstalled.addListener(() => {
 	});
 });
 
-ext.contextMenus.onClicked.addListener((info, tab) => {
+ext.contextMenus.onClicked.addListener(async (info, tab) => {
 	if (info.menuItemId === 'tidora-from-selection') {
+		// info.selectionText (z API menu kontekstowego) to zawsze goły plain text - żeby
+		// zachować strukturę zaznaczenia (np. tabelę), trzeba sięgnąć po HTML zaznaczenia w
+		// samej stronie. executeScript działa tu na aktywnej karcie dzięki activeTab -
+		// kliknięcie w menu kontekstowe LICZY SIĘ jako gest użytkownika, który je przyznaje.
+		// Nie wychodzi na stronach specjalnych (chrome://, Web Store...) - wtedy spadamy na
+		// plain text zamiast wywalać całą akcję.
+		let html = '';
+		try {
+			const [{ result }] = await ext.scripting.executeScript({ target: { tabId: tab.id }, func: getSelectionHtml });
+			html = result || '';
+		} catch {
+			/* strona specjalna albo brak dostępu - fallback niżej */
+		}
 		openCompose({
 			title: truncate(info.selectionText || tab?.title || '', 140),
-			description: info.selectionText || '',
+			description: html || escapeHtml(info.selectionText || ''),
 			email_url: tab?.url || ''
 		});
 	} else if (info.menuItemId === 'tidora-from-page') {
@@ -82,6 +95,24 @@ ext.runtime.onMessage.addListener((msg, sender, sendResponse) => {
 function truncate(s, max) {
 	s = (s || '').trim().replace(/\s+/g, ' ');
 	return s.length > max ? s.slice(0, max - 1) + '…' : s;
+}
+
+function escapeHtml(s) {
+	return (s || '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+}
+
+// Uruchamiane W STRONIE przez ext.scripting.executeScript - musi być samowystarczalne (bez
+// domknięć na zmienne z tego pliku, przegląderka je serializuje osobno). Klonuje zaznaczenie
+// do pomocniczego kontenera i czyta jego innerHTML - zachowuje strukturę (tabele, listy,
+// pogrubienia), nie tylko goły tekst jak `info.selectionText` z API menu kontekstowego.
+function getSelectionHtml() {
+	const sel = window.getSelection();
+	if (!sel || sel.rangeCount === 0) return '';
+	const container = document.createElement('div');
+	for (let i = 0; i < sel.rangeCount; i++) {
+		container.appendChild(sel.getRangeAt(i).cloneContents());
+	}
+	return container.innerHTML;
 }
 
 async function openCompose(prefill) {

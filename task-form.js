@@ -24,7 +24,10 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	};
 
 	els.title.value = initialPrefill.title || '';
-	els.description.value = initialPrefill.description || '';
+	// contenteditable, nie textarea - Ctrl+V wkleja WYSIWYG (tabele/listy/pogrubienia), textarea
+	// spłaszczyłby wszystko do plain text. innerHTML, bo prefill z content scriptów jest już
+	// HTML (patrz content-gmail.js/content-webmail.js/background.js getSelectionHtml).
+	els.description.innerHTML = initialPrefill.description || '';
 	els.url.textContent = initialPrefill.email_url || '';
 	els.url.href = initialPrefill.email_url || '';
 
@@ -69,7 +72,7 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 			type: 'TIDORA_CREATE_TASK',
 			task: {
 				title,
-				description: els.description.value.trim(),
+				description: els.description.innerHTML.trim(),
 				email_url: initialPrefill.email_url || '',
 				contractor_id: els.contractor?.value ? Number(els.contractor.value) : undefined
 			}

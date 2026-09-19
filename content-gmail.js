@@ -44,7 +44,10 @@ function createTaskFromMessage(subjectEl) {
 	// ojciec/dziecko - najbliższe wspólne miejsce to kontener konwersacji, stąd szukanie w górę.
 	const container = subjectEl.closest('.adn, .if, [role="main"]') || document;
 	const bodyEl = container.querySelector(BODY_SELECTOR);
-	const description = bodyEl ? bodyEl.innerText.trim().slice(0, 4000) : '';
+	// innerHTML, nie innerText - żeby tabele/listy/pogrubienia z maila przeżyły w opisie
+	// zadania. Serwer i tak przepuszcza to przez HTMLPurifier (allowlista tagów), więc
+	// obcięcie w środku znacznika jest bezpieczne - parser po prostu domknie, co się da.
+	const description = bodyEl ? bodyEl.innerHTML.trim().slice(0, 20000) : '';
 
 	ext.runtime.sendMessage({
 		type: 'TIDORA_OPEN_COMPOSE',
