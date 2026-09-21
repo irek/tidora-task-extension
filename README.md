@@ -39,8 +39,7 @@ bez nagłówków CORS na serwerze, przeglądarka odrzuci odczyt odpowiedzi).
 
 Wszystkie faktyczne wywołania `/api/ext/*` idą przez `background.js` (service worker), nigdy
 bezpośrednio ze content scriptów/popupu/opcji - tylko tło ma nadane `host_permissions` dla
-zapisanego adresu instancji, co pozwala ominąć CORS (udokumentowane zachowanie
-rozszerzeń MV3, nie obejście zabezpieczeń serwera).
+zapisanego adresu instancji.
 
 ## Znane ograniczenia
 
