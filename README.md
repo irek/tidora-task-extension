@@ -1,7 +1,7 @@
 # TIDORA — Utwórz zadanie
 
 Rozszerzenie do przeglądarki (Chrome/Edge/Firefox, Manifest V3), które tworzy zadania w
-TIDORA (FAKTURA) bez wchodzenia do panelu:
+aplikacji TIDORA.business bez wchodzenia do panelu:
 
 - **Dowolne zaznaczenie tekstu na dowolnej stronie** → menu kontekstowe → „Utwórz zadanie
   w TIDORA z zaznaczenia" (działa wszędzie, w tym w Roundcube — nie wymaga żadnej
@@ -49,4 +49,5 @@ rozszerzeń MV3, nie obejście zabezpieczeń serwera).
 - Integracja z Roundcube jest "best effort" — różne skiny/wersje mają różny DOM, więc
   przycisk zawsze się pojawi, ale automatyczne wyciąganie tematu/treści może nie zadziałać
   w każdej instalacji (wtedy trzeba ręcznie zaznaczyć tekst przed kliknięciem).
-- Ikony to prosty placeholder wygenerowany programowo, nie branding docelowy.
+- Ikony to sygnet marki TIDORA Business (`app/api/assets/brand-icon.png` w repo FAKTURY,
+  wyskalowany do rozmiarów rozszerzenia) - jeśli branding się zmieni, trzeba je odtworzyć stamtąd.
