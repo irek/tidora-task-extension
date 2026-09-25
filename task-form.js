@@ -6,6 +6,67 @@
 // `ext` (alias browser.*/chrome.*) jest już zadeklarowany globalnie przez i18n.js, który
 // ładuje się jako pierwszy <script> w popup.html/compose.html (przed tym plikiem) - stąd
 // brak własnej deklaracji tutaj, popup.js/compose.js też go widzą za darmo.
+
+// Prefill opisu to HTML z Gmaila/Roundcube/dowolnej strony (patrz content-gmail.js,
+// content-webmail.js, background.js getSelectionHtml) - czyli potencjalnie NIE zaufany
+// (spreparowany mail/strona), a trafia do innerHTML strony rozszerzenia. Serwer i tak
+// przepuszcza opis przez HTMLPurifier przy zapisie, ale ten podgląd renderuje się od razu,
+// więc czyścimy też po stronie klienta - allowlista atrybutów (usuwa on*/style/class w
+// locie) + blokada javascript:/vbscript: i data: poza data:image/* we src.
+function sanitizeHtml(html) {
+	const DROP_TAGS = new Set([
+		'SCRIPT', 'STYLE', 'IFRAME', 'OBJECT', 'EMBED', 'FORM', 'LINK', 'META',
+		'BASE', 'SVG', 'MATH', 'NOSCRIPT', 'TEMPLATE', 'AUDIO', 'VIDEO', 'SOURCE', 'TRACK'
+	]);
+	const ATTR_ALLOWLIST = {
+		A: ['href'],
+		IMG: ['src', 'alt'],
+		TD: ['colspan', 'rowspan'],
+		TH: ['colspan', 'rowspan']
+	};
+
+	function isSafeUrl(value, allowDataImage) {
+		const v = (value || '').trim();
+		if (/^(javascript|vbscript):/i.test(v)) return false;
+		if (/^data:/i.test(v)) return !!allowDataImage && /^data:image\//i.test(v);
+		return true;
+	}
+
+	function clean(node) {
+		[...node.childNodes].forEach((child) => {
+			if (child.nodeType === Node.ELEMENT_NODE) {
+				// toUpperCase(): elementy z przestrzeni nazw SVG/MathML (np. <svg>, zagnieżdżony
+				// w nich <script>) mają tagName w oryginalnej, małej wielkości liter - bez tego
+				// DROP_TAGS by je omijał i zostawiał w wyjściu (patrz PR-owy test bezpieczeństwa).
+				const tag = child.tagName.toUpperCase();
+				if (DROP_TAGS.has(tag)) {
+					child.remove();
+					return;
+				}
+				const allowed = ATTR_ALLOWLIST[tag] || [];
+				[...child.attributes].forEach((attr) => {
+					const name = attr.name.toLowerCase();
+					if (!allowed.includes(name)) {
+						child.removeAttribute(attr.name);
+						return;
+					}
+					if ((name === 'href' && !isSafeUrl(attr.value, false)) ||
+						(name === 'src' && !isSafeUrl(attr.value, true))) {
+						child.removeAttribute(attr.name);
+					}
+				});
+				clean(child);
+			} else if (child.nodeType !== Node.TEXT_NODE) {
+				child.remove(); // komentarze itp.
+			}
+		});
+	}
+
+	const doc = new DOMParser().parseFromString(html, 'text/html');
+	clean(doc.body);
+	return doc.body.innerHTML;
+}
+
 function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	const els = {
 		title: document.getElementById('title'),
@@ -21,8 +82,9 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	els.title.value = initialPrefill.title || '';
 	// contenteditable, nie textarea - Ctrl+V wkleja WYSIWYG (tabele/listy/pogrubienia), textarea
 	// spłaszczyłby wszystko do plain text. innerHTML, bo prefill z content scriptów jest już
-	// HTML (patrz content-gmail.js/content-webmail.js/background.js getSelectionHtml).
-	els.description.innerHTML = initialPrefill.description || '';
+	// HTML (patrz content-gmail.js/content-webmail.js/background.js getSelectionHtml) -
+	// sanitizeHtml() powyżej odcina niebezpieczne tagi/atrybuty przed wstawieniem.
+	els.description.innerHTML = sanitizeHtml(initialPrefill.description || '');
 	els.url.textContent = initialPrefill.email_url || '';
 	els.url.href = initialPrefill.email_url || '';
 
