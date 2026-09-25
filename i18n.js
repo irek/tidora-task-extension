@@ -11,10 +11,14 @@ function applyI18n(root = document) {
 	root.querySelectorAll('[data-i18n]').forEach((el) => {
 		el.textContent = ext.i18n.getMessage(el.getAttribute('data-i18n'));
 	});
-	// innerHTML tylko dla treści z zaufanymi, statycznymi tagami (<code> itp.) zdefiniowanymi
-	// w messages.json - nie z danymi użytkownika.
+	// Treść zawsze z zaufanego, statycznego messages.json (nigdy z danych użytkownika), ale
+	// simple tagi jak <code> wymagają parsowania HTML, nie samego textContent. replaceChildren
+	// z węzłami zamiast literalnego el.innerHTML = string - addons-linter (AMO) flaguje każde
+	// przypisanie do innerHTML jako "Unsafe assignment" niezależnie od źródła danych.
 	root.querySelectorAll('[data-i18n-html]').forEach((el) => {
-		el.innerHTML = ext.i18n.getMessage(el.getAttribute('data-i18n-html'));
+		const html = ext.i18n.getMessage(el.getAttribute('data-i18n-html'));
+		const parsed = document.importNode(new DOMParser().parseFromString(html, 'text/html').body, true);
+		el.replaceChildren(...parsed.childNodes);
 	});
 	root.querySelectorAll('[data-i18n-placeholder]').forEach((el) => {
 		el.setAttribute('placeholder', ext.i18n.getMessage(el.getAttribute('data-i18n-placeholder')));

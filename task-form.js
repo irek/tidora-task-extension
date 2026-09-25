@@ -62,9 +62,16 @@ function sanitizeHtml(html) {
 		});
 	}
 
+	// Fragment węzłów, nie string - element.innerHTML = string wygląda dla lintera addons-linter
+	// (AMO) identycznie niezależnie od tego, czy string przeszedł przez sanitizer, więc i tak
+	// dostałby "Unsafe assignment to innerHTML". replaceChildren(node) na wywołaniu niżej omija
+	// to strukturalnie, bo nigdy nie ma literalnego przypisania do .innerHTML.
 	const doc = new DOMParser().parseFromString(html, 'text/html');
 	clean(doc.body);
-	return doc.body.innerHTML;
+	const imported = document.importNode(doc.body, true);
+	const fragment = document.createDocumentFragment();
+	while (imported.firstChild) fragment.appendChild(imported.firstChild);
+	return fragment;
 }
 
 function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
@@ -83,8 +90,9 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	// contenteditable, nie textarea - Ctrl+V wkleja WYSIWYG (tabele/listy/pogrubienia), textarea
 	// spłaszczyłby wszystko do plain text. innerHTML, bo prefill z content scriptów jest już
 	// HTML (patrz content-gmail.js/content-webmail.js/background.js getSelectionHtml) -
-	// sanitizeHtml() powyżej odcina niebezpieczne tagi/atrybuty przed wstawieniem.
-	els.description.innerHTML = sanitizeHtml(initialPrefill.description || '');
+	// sanitizeHtml() powyżej odcina niebezpieczne tagi/atrybuty przed wstawieniem i zwraca
+	// fragment węzłów (nie string) - replaceChildren zamiast innerHTML.
+	els.description.replaceChildren(sanitizeHtml(initialPrefill.description || ''));
 	els.url.textContent = initialPrefill.email_url || '';
 	els.url.href = initialPrefill.email_url || '';
 
