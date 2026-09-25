@@ -19,7 +19,8 @@ if (Test-Path $zipPath) { Remove-Item $zipPath -Force }
 
 $include = @(
     'manifest.json', 'background.js', 'popup.html', 'popup.js', 'compose.html', 'compose.js',
-    'options.html', 'options.js', 'task-form.js', 'task-form.css', 'content-gmail.js', 'content-webmail.js', 'icons'
+    'options.html', 'options.js', 'task-form.js', 'task-form.css', 'content-gmail.js', 'content-webmail.js',
+    'i18n.js', 'icons', '_locales'
 )
 $staging = Join-Path $distDir '_staging'
 if (Test-Path $staging) { Remove-Item $staging -Recurse -Force }

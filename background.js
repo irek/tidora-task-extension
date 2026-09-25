@@ -24,12 +24,12 @@ const ROUNDCUBE_SCRIPT_ID = 'tidora-webmail-roundcube';
 ext.runtime.onInstalled.addListener(() => {
 	ext.contextMenus.create({
 		id: 'tidora-from-selection',
-		title: 'Utwórz zadanie w TIDORA z zaznaczenia',
+		title: ext.i18n.getMessage('ctxMenuSelection'),
 		contexts: ['selection']
 	});
 	ext.contextMenus.create({
 		id: 'tidora-from-page',
-		title: 'Utwórz zadanie w TIDORA z tej strony',
+		title: ext.i18n.getMessage('ctxMenuPage'),
 		contexts: ['page']
 	});
 });
@@ -130,7 +130,7 @@ async function getConfig() {
 async function createTask(task) {
 	const { baseUrl, apiKey } = await getConfig();
 	if (!baseUrl || !apiKey) {
-		return { ok: false, error: 'Uzupełnij adres instancji i klucz API w ustawieniach rozszerzenia.' };
+		return { ok: false, error: ext.i18n.getMessage('errFillSettings') };
 	}
 	try {
 		const res = await fetch(baseUrl + '/api/ext/tasks', {
@@ -140,12 +140,12 @@ async function createTask(task) {
 		});
 		const data = await res.json().catch(() => null);
 		if (!res.ok || !data?.result) {
-			return { ok: false, error: data?.error || `Błąd serwera (HTTP ${res.status})` };
+			return { ok: false, error: data?.error || ext.i18n.getMessage('errServerHttp', String(res.status)) };
 		}
-		notify('Zadanie utworzone', task.title);
+		notify(ext.i18n.getMessage('notifyTaskCreatedTitle'), task.title);
 		return { ok: true, taskId: data.task_id };
 	} catch (e) {
-		return { ok: false, error: 'Nie udało się połączyć z instancją TIDORA (' + e.message + ')' };
+		return { ok: false, error: ext.i18n.getMessage('errConnectFailed', e.message) };
 	}
 }
 
@@ -156,7 +156,7 @@ async function createTask(task) {
 async function listContractors() {
 	const { baseUrl, apiKey } = await getConfig();
 	if (!baseUrl || !apiKey) {
-		return { ok: false, error: 'Brak konfiguracji' };
+		return { ok: false, error: ext.i18n.getMessage('errNoConfig') };
 	}
 	try {
 		const res = await fetch(baseUrl + '/api/ext/contractors', {

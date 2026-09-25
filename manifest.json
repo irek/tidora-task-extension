@@ -1,9 +1,10 @@
 {
 	"manifest_version": 3,
-	"name": "TIDORA — Utwórz zadanie",
-	"short_name": "TIDORA Zadania",
-	"version": "0.1.0",
-	"description": "Twórz zadania w TIDORA.business z Gmaila, Roundcube albo dowolnego zaznaczenia na stronie.",
+	"default_locale": "pl",
+	"name": "__MSG_extName__",
+	"short_name": "__MSG_extShortName__",
+	"version": "0.2.0",
+	"description": "__MSG_extDescription__",
 	"author": "TIDORA.business",
 	"homepage_url": "https://tidora.business",
 	"icons": {
@@ -13,7 +14,7 @@
 		"128": "icons/icon128.png"
 	},
 	"action": {
-		"default_title": "Utwórz zadanie w TIDORA",
+		"default_title": "__MSG_actionTitle__",
 		"default_popup": "popup.html",
 		"default_icon": {
 			"16": "icons/icon16.png",

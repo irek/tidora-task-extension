@@ -19,7 +19,7 @@ function injectButton() {
 
 		const btn = document.createElement('button');
 		btn.textContent = '+ TIDORA';
-		btn.title = 'Utwórz zadanie w TIDORA z tej wiadomości';
+		btn.title = ext.i18n.getMessage('gmailButtonTitle');
 		btn.style.cssText = [
 			'margin-left:10px', 'padding:3px 10px', 'font-size:12px', 'font-family:inherit',
 			'border-radius:14px', 'border:1px solid #4f46e5', 'color:#4f46e5', 'background:#fff',

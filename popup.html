@@ -6,30 +6,31 @@
 </head>
 <body>
 	<div class="wrap">
-		<h1><span class="dot"></span> Nowe zadanie w TIDORA</h1>
+		<h1><span class="dot"></span> <span data-i18n="taskFormHeading"></span></h1>
 		<form id="form">
-			<label for="title">Tytuł</label>
+			<label for="title" data-i18n="fieldTitle"></label>
 			<input id="title" type="text" required maxlength="255" />
 
-			<label for="description">Opis</label>
-			<div id="description" class="rich-input" contenteditable="true" data-placeholder="opcjonalnie - wklej tekst, tabelę..."></div>
+			<label for="description" data-i18n="fieldDescription"></label>
+			<div id="description" class="rich-input" contenteditable="true" data-i18n-dataplaceholder="descriptionPlaceholder"></div>
 
 			<a id="url" class="url-line" target="_blank" rel="noopener"></a>
 
 			<div id="contractor-field" style="display:none">
-				<label for="contractor">Klient (opcjonalnie)</label>
+				<label for="contractor" data-i18n="fieldClient"></label>
 				<select id="contractor">
-					<option value="">— bez klienta —</option>
+					<option value="" data-i18n="noClientOption"></option>
 				</select>
 			</div>
 
 			<div class="row">
-				<button type="submit" id="submit" class="btn-primary">Utwórz zadanie</button>
+				<button type="submit" id="submit" class="btn-primary" data-i18n="submitCreateTask"></button>
 			</div>
 			<div id="status" class="status"></div>
 		</form>
-		<div class="footer"><a href="#" id="open-options">Ustawienia rozszerzenia</a></div>
+		<div class="footer"><a href="#" id="open-options" data-i18n="footerSettingsLink"></a></div>
 	</div>
+	<script src="i18n.js"></script>
 	<script src="task-form.js"></script>
 	<script src="popup.js"></script>
 </body>

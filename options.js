@@ -1,8 +1,5 @@
-// Firefox ma promisowy `browser.*`; jego `chrome.*` jest tylko callbackowe dla zgodności ze
-// starym Chrome, więc `await chrome...` by się tu wywalił - patrz ten sam alias w reszcie
-// plików rozszerzenia (background.js ma pełniejszy komentarz, w tym o atrapie `browser` w Chromium).
-const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
-
+// `ext` (alias browser.*/chrome.*) jest już zadeklarowany globalnie przez i18n.js, który
+// ładuje się jako pierwszy <script> w options.html (przed tym plikiem).
 const $ = (id) => document.getElementById(id);
 
 function setStatus(el, kind, text) {
@@ -27,7 +24,7 @@ $('save').addEventListener('click', async () => {
 	const status = $('status');
 
 	if (!baseUrl || !apiKey) {
-		setStatus(status, 'err', 'Wypełnij oba pola.');
+		setStatus(status, 'err', ext.i18n.getMessage('errFillBothFields'));
 		return;
 	}
 
@@ -35,7 +32,7 @@ $('save').addEventListener('click', async () => {
 	try {
 		origin = new URL(baseUrl).origin + '/*';
 	} catch {
-		setStatus(status, 'err', 'Nieprawidłowy adres instancji.');
+		setStatus(status, 'err', ext.i18n.getMessage('errInvalidInstanceUrl'));
 		return;
 	}
 
@@ -43,25 +40,25 @@ $('save').addEventListener('click', async () => {
 	// przeglądarka odrzuci odczyt odpowiedzi - patrz komentarz w background.js.
 	const granted = await ext.permissions.request({ origins: [origin] });
 	if (!granted) {
-		setStatus(status, 'err', 'Bez przyznanego dostępu do tej domeny rozszerzenie nie będzie mogło się z nią połączyć.');
+		setStatus(status, 'err', ext.i18n.getMessage('errHostAccessDenied'));
 		return;
 	}
 
 	await ext.storage.local.set({ baseUrl, apiKey });
-	setStatus(status, 'ok', 'Zapisano.');
+	setStatus(status, 'ok', ext.i18n.getMessage('statusSaved'));
 });
 
 $('test').addEventListener('click', async () => {
 	const baseUrl = normalizeBaseUrl($('baseUrl').value);
 	const apiKey = $('apiKey').value.trim();
 	const status = $('status');
-	setStatus(status, 'info', 'Sprawdzanie…');
+	setStatus(status, 'info', ext.i18n.getMessage('statusChecking'));
 
 	const resp = await ext.runtime.sendMessage({ type: 'TIDORA_TEST_CONNECTION', baseUrl, apiKey });
 	if (resp?.ok) {
-		setStatus(status, 'ok', `Połączono ✓ (klucz: ${resp.apiKeyName || '?'})`);
+		setStatus(status, 'ok', ext.i18n.getMessage('statusConnectedOk', resp.apiKeyName || '?'));
 	} else {
-		setStatus(status, 'err', resp?.error || 'Połączenie nieudane.');
+		setStatus(status, 'err', resp?.error || ext.i18n.getMessage('statusConnectionFailed'));
 	}
 });
 
@@ -72,7 +69,7 @@ $('saveRoundcube').addEventListener('click', async () => {
 	if (!roundcubeUrl) {
 		await ext.storage.local.remove('roundcubeUrl');
 		await ext.runtime.sendMessage({ type: 'TIDORA_UNREGISTER_WEBMAIL' });
-		setStatus(status, 'info', 'Wyłączono integrację z Roundcube.');
+		setStatus(status, 'info', ext.i18n.getMessage('statusRoundcubeDisabled'));
 		return;
 	}
 
@@ -80,21 +77,21 @@ $('saveRoundcube').addEventListener('click', async () => {
 	try {
 		origin = new URL(roundcubeUrl).origin + '/*';
 	} catch {
-		setStatus(status, 'err', 'Nieprawidłowy adres.');
+		setStatus(status, 'err', ext.i18n.getMessage('errInvalidAddress'));
 		return;
 	}
 
 	const granted = await ext.permissions.request({ origins: [origin] });
 	if (!granted) {
-		setStatus(status, 'err', 'Bez przyznanego dostępu przycisk nie pojawi się w Roundcube.');
+		setStatus(status, 'err', ext.i18n.getMessage('errRoundcubeAccessDenied'));
 		return;
 	}
 
 	const resp = await ext.runtime.sendMessage({ type: 'TIDORA_REGISTER_WEBMAIL', originPattern: origin });
 	if (resp?.ok) {
 		await ext.storage.local.set({ roundcubeUrl });
-		setStatus(status, 'ok', 'Zapisano - odśwież Roundcube, żeby zobaczyć przycisk.');
+		setStatus(status, 'ok', ext.i18n.getMessage('statusRoundcubeSaved'));
 	} else {
-		setStatus(status, 'err', resp?.error || 'Nie udało się zarejestrować.');
+		setStatus(status, 'err', resp?.error || ext.i18n.getMessage('errRoundcubeRegisterFailed'));
 	}
 });

@@ -51,7 +51,7 @@ function createFloatingButton() {
 	const btn = document.createElement('button');
 	btn.id = 'tidora-webmail-btn';
 	btn.textContent = '+ TIDORA';
-	btn.title = 'Utwórz zadanie w TIDORA (z zaznaczenia albo z tej wiadomości)';
+	btn.title = ext.i18n.getMessage('webmailButtonTitle');
 	btn.style.cssText = [
 		'position:fixed', 'right:20px', 'bottom:20px', 'z-index:2147483647',
 		'padding:9px 16px', 'font-size:13px', 'font-family:system-ui,sans-serif',

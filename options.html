@@ -2,7 +2,7 @@
 <html lang="pl">
 <head>
 	<meta charset="utf-8" />
-	<title>Ustawienia — TIDORA: Utwórz zadanie</title>
+	<title data-i18n="optionsPageTitle"></title>
 	<style>
 		* { box-sizing: border-box; }
 		body {
@@ -39,47 +39,39 @@
 	</style>
 </head>
 <body>
-	<h1><span class="dot"></span> TIDORA — Utwórz zadanie</h1>
-	<p class="hint">
-		Zaznacz dowolny tekst na stronie (Gmail, Roundcube, cokolwiek) i wybierz z menu kontekstowego
-		„Utwórz zadanie w TIDORA z zaznaczenia” — albo kliknij ikonę rozszerzenia na pasku narzędzi.
-	</p>
+	<h1><span class="dot"></span> <span data-i18n="optionsHeading"></span></h1>
+	<p class="hint" data-i18n="optionsHint"></p>
 
 	<fieldset>
-		<legend>Połączenie z TIDORA</legend>
-		<label for="baseUrl">Adres instancji</label>
-		<input id="baseUrl" type="url" placeholder="https://twoja-instancja.tidora.business" required />
-		<div class="field-hint">Bez ukośnika na końcu, np. <code>https://twoja-nazwa.tidora.business</code>.</div>
+		<legend data-i18n="fieldsetConnection"></legend>
+		<label for="baseUrl" data-i18n="fieldInstanceUrl"></label>
+		<input id="baseUrl" type="url" data-i18n-placeholder="instanceUrlPlaceholder" required />
+		<div class="field-hint" data-i18n-html="instanceUrlHint"></div>
 
-		<label for="apiKey">Osobisty klucz API</label>
-		<input id="apiKey" type="password" placeholder="tbk_..." required />
-		<div class="field-hint">
-			Wygeneruj w panelu TIDORA: Ustawienia → Integracje → API zewnętrzne → Nowy klucz,
-			z uprawnieniem <code>Tworzenie zadań</code> i przypisanym Twoim kontem.
-		</div>
+		<label for="apiKey" data-i18n="fieldApiKey"></label>
+		<input id="apiKey" type="password" data-i18n-placeholder="apiKeyPlaceholder" required />
+		<div class="field-hint" data-i18n-html="apiKeyHint"></div>
 
 		<div class="actions">
-			<button id="save">Zapisz</button>
-			<button id="test" class="secondary" type="button">Testuj połączenie</button>
+			<button id="save" data-i18n="btnSave"></button>
+			<button id="test" class="secondary" type="button" data-i18n="btnTestConnection"></button>
 		</div>
 		<div id="status" class="status"></div>
 	</fieldset>
 
 	<fieldset>
-		<legend>Roundcube Webmail (opcjonalnie)</legend>
-		<p class="hint" style="margin-top:0">
-			Podaj adres swojego Roundcube, żeby dostać dodatkowy przycisk „+ TIDORA” w widoku
-			wiadomości (poza uniwersalnym zaznaczeniem, które działa wszędzie i bez tego).
-		</p>
-		<label for="roundcubeUrl">Adres Roundcube</label>
-		<input id="roundcubeUrl" type="url" placeholder="https://webmail.twoja-firma.pl" />
+		<legend data-i18n="fieldsetRoundcube"></legend>
+		<p class="hint" style="margin-top:0" data-i18n="roundcubeHint"></p>
+		<label for="roundcubeUrl" data-i18n="fieldRoundcubeUrl"></label>
+		<input id="roundcubeUrl" type="url" data-i18n-placeholder="roundcubeUrlPlaceholder" />
 
 		<div class="actions">
-			<button id="saveRoundcube" type="button">Zapisz i przyznaj dostęp</button>
+			<button id="saveRoundcube" type="button" data-i18n="btnSaveRoundcube"></button>
 		</div>
 		<div id="roundcubeStatus" class="status"></div>
 	</fieldset>
 
+	<script src="i18n.js"></script>
 	<script src="options.js"></script>
 </body>
 </html>

@@ -3,14 +3,9 @@
 // kontekstowego - kontekst zaznaczenia/strony przekazany przez background.js). Obie strony
 // dostarczają tylko initialPrefill; reszta (wysyłka, obsługa błędów) jest identyczna.
 //
-// Deklarowane tu (nie w popup.js/compose.js) - klasyczne (nie-modułowe) skrypty dzielą ten
-// sam zakres globalny strony, a ten plik ładuje się w obu jako pierwszy (patrz <script> w
-// popup.html/compose.html), więc popup.js/compose.js widzą `ext` bez własnej deklaracji.
-// Firefox ma promisowy `browser.*`; jego `chrome.*` jest tylko callbackowe dla zgodności ze
-// starym Chrome, więc `await chrome.storage...` by się tu wywalił (patrz background.js po
-// pełny komentarz, w tym o atrapie `browser` w Chromium, przed którą chroni ten warunek).
-const ext = (typeof browser === 'undefined' || Object.getPrototypeOf(browser) === Object.prototype) ? chrome : browser;
-
+// `ext` (alias browser.*/chrome.*) jest już zadeklarowany globalnie przez i18n.js, który
+// ładuje się jako pierwszy <script> w popup.html/compose.html (przed tym plikiem) - stąd
+// brak własnej deklaracji tutaj, popup.js/compose.js też go widzą za darmo.
 function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 	const els = {
 		title: document.getElementById('title'),
@@ -59,11 +54,11 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 		if (!title) return;
 
 		els.submit.disabled = true;
-		setStatus('info', 'Wysyłanie…');
+		setStatus('info', ext.i18n.getMessage('statusSending'));
 
 		const { baseUrl, apiKey } = await ext.storage.local.get(['baseUrl', 'apiKey']);
 		if (!baseUrl || !apiKey) {
-			setStatus('err', 'Uzupełnij adres instancji i klucz API w ustawieniach rozszerzenia.');
+			setStatus('err', ext.i18n.getMessage('errFillSettings'));
 			els.submit.disabled = false;
 			return;
 		}
@@ -79,14 +74,14 @@ function initTaskForm(initialPrefill, { closeOnSuccess } = {}) {
 		});
 
 		if (resp?.ok) {
-			setStatus('ok', 'Zadanie utworzone ✓');
+			setStatus('ok', ext.i18n.getMessage('statusTaskCreated'));
 			if (closeOnSuccess) {
 				setTimeout(() => window.close(), 700);
 			} else {
 				els.submit.disabled = false;
 			}
 		} else {
-			setStatus('err', resp?.error || 'Nie udało się utworzyć zadania.');
+			setStatus('err', resp?.error || ext.i18n.getMessage('statusTaskCreateFailed'));
 			els.submit.disabled = false;
 		}
 	});
